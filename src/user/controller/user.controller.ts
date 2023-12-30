@@ -1,7 +1,7 @@
-import { Body, Controller, Delete, Get, Param, Put, Post, UseGuards, Request, Query, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Put, Post, UseGuards, Request, Query, UploadedFile, UseInterceptors, Res } from '@nestjs/common';
 import { UserService } from '../service/user.service';
 import { UserRole, user } from '../model/user.interface';
-import { Observable, catchError, map, of, tap } from 'rxjs';
+import { Observable, catchError, map, of, tap, throwError } from 'rxjs';
 import { hasRoles } from 'src/auth/decorator/roles.decorator';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 import { RolesGuard } from 'src/auth/guards/role.guard';
@@ -11,6 +11,7 @@ import path = require('path');
 import { v4 as uuidv4 } from 'uuid';
 import { diskStorage } from 'multer';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { join } from 'path';
 export const storage = {
     storage: diskStorage({
         destination: './uploads/profileimages',
@@ -79,10 +80,12 @@ export class UserController {
     deleteOne(@Param('id')id:string):Observable<user>{
         return this.userService.deleteOne(Number(id));
     }
+    @UseGuards(JwtAuthGuard)
     @Put(':id')
-    updateOne(@Param('id')id:string,@Body()user:user):Observable<any>{
-        return this.userService.updateOne(Number(id),user);
+    updateOne(@Param('id') id: string, @Body() user: user): Observable<any> {
+        return this.userService.updateOne(Number(id), user);
     }
+
     @hasRoles(UserRole.ADMIN)
     @UseGuards(JwtAuthGuard,RolesGuard)
     @Put(':id/role')
@@ -99,6 +102,10 @@ export class UserController {
             tap((user: user) => console.log(user)),
             map((user:user) => ({profileImage: user.profileImage}))
         )
+    }
+    @Get('profile-image/:imagename')
+    findProfileImage(@Param('imagename') imagename, @Res() res): Observable<Object> {
+        return of(res.sendFile(join(process.cwd(), 'uploads/profileimages/' + imagename)));
     }
 
 }

@@ -101,14 +101,30 @@ export class UserService {
     deleteOne(id:number): Observable<any>{
         return from(this.userRepository.delete(id));
     }
-    updateOne(id: number,user:user):Observable<any>{
-        delete user.email;
-        delete user.password;
-        delete user.role;
-        return from(this.userRepository.update(id,user)).pipe(
+    updateOne(id: number, user: user): Observable<any> {
+        console.log('User object before update:', user);
+    
+        // Check if user has at least one property for update
+        if (Object.keys(user).length === 0) {
+            return throwError(() => new Error('Invalid criteria for update'));
+        }
+    
+        // Create a new object with non-empty properties for update
+        const updateObject = {};
+        Object.keys(user).forEach(key => {
+            if (user[key] !== undefined) {
+                updateObject[key] = user[key];
+            }
+        });
+    
+        console.log('Update object:', updateObject);
+    
+        return from(this.userRepository.save({ id, ...updateObject })).pipe(
             switchMap(() => this.findOne(id))
-        );;
+        );
     }
+    
+    
     updateRoleOfUser(id : number,user:user):Observable<any>{
         return from(this.userRepository.update(id,user));
     }
