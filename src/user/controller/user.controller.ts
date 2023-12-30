@@ -12,6 +12,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { diskStorage } from 'multer';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { join } from 'path';
+import { UserIsUserGuard } from 'src/auth/guards/UserIsUser.guard';
 export const storage = {
     storage: diskStorage({
         destination: './uploads/profileimages',
@@ -80,7 +81,7 @@ export class UserController {
     deleteOne(@Param('id')id:string):Observable<user>{
         return this.userService.deleteOne(Number(id));
     }
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard,UserIsUserGuard)
     @Put(':id')
     updateOne(@Param('id') id: string, @Body() user: user): Observable<any> {
         return this.userService.updateOne(Number(id), user);
